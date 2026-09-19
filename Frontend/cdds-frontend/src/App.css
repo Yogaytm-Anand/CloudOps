@@ -1,0 +1,688 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: white;
+    color: #17213a;
+}
+
+.home-page {
+    min-height: 100vh;
+    padding: 10px 20px;
+}
+
+.home-header {
+    background: #c4b7a3;
+    border-radius: 15px;
+    padding: 18px 18px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.home-header h1 {
+    margin: 0;
+    color: white;
+    font-size: 27px;
+}
+
+.home-header p {
+    margin: 5px 0 0;
+    color: white;
+    font-size: 13px;
+}
+
+.feature-row {
+    display: flex;
+    justify-content: center;
+    gap: 65px;
+    margin-top: 290px;
+}
+
+.feature {
+    text-align: center;
+    width: 90px;
+}
+
+.feature-icon {
+    width: 34px;
+    height: 34px;
+    margin: auto;
+    border-radius: 50%;
+    background: #f1f4f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #b8a98f;
+    font-size: 18px;
+}
+
+.feature p {
+    margin-top: 9px;
+    font-size: 11px;
+    color: #444;
+}
+
+.repository-section {
+    width: 60%;
+    margin: 25px auto 0;
+}
+
+.repository-input {
+    display: flex;
+    align-items: center;
+    background: #f1f1f1;
+    border-radius: 18px;
+    padding: 5px 12px 5px 20px;
+}
+
+.repository-input input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    color: #333;
+}
+
+.repository-input input::placeholder {
+    color: #999;
+}
+
+.repository-input button {
+    border: none;
+    border-radius: 20px;
+    padding: 9px 20px;
+    background: #c4b7a3;
+    color: white;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.docker-warning {
+    text-align: right;
+    margin-top: 15px;
+    font-size: 12px;
+    color: #333;
+}
+/* =========================
+   COMMON PAGE HEADER
+========================= */
+
+.page-header {
+    background: #c4b7a3;
+    border-radius: 15px;
+    padding: 18px 18px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.page-header h1 {
+    margin: 0;
+    color: white;
+    font-size: 27px;
+}
+
+.page-header p {
+    margin: 5px 0 0;
+    color: white;
+    font-size: 13px;
+}
+
+
+/* =========================
+   DEPLOYMENT ANALYSIS
+========================= */
+
+.analysis-page {
+    min-height: 100vh;
+    padding: 10px 20px;
+}
+
+.repository-display {
+    margin: 32px 15px 27px;
+    padding: 14px 20px;
+    background: #f3f6f9;
+    border-radius: 10px;
+}
+
+.repository-display span {
+    display: block;
+    color: #778398;
+    font-size: 12px;
+}
+
+.repository-display p {
+    margin: 3px 0 0;
+    font-size: 14px;
+}
+
+.analysis-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 0 15px;
+}
+
+.analysis-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px;
+    min-height: 68px;
+    border: 1px solid #dce2e9;
+    border-radius: 10px;
+}
+
+.analysis-item h3 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.analysis-item p {
+    margin: 5px 0 0;
+    color: #778398;
+    font-size: 11px;
+}
+
+.analysis-item strong {
+    color: #b8a98f;
+    font-size: 14px;
+}
+
+.bottom-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 24px 15px 0;
+}
+
+.bottom-navigation div {
+    display: flex;
+    gap: 12px;
+}
+
+.bottom-navigation button,
+.back-button {
+    border: none;
+    border-radius: 22px;
+    padding: 11px 25px;
+    background: #f7efe3;
+    color: #b5a58e;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.bottom-navigation button:hover,
+.back-button:hover {
+    background: #eee3d4;
+}
+
+
+/* =========================
+   MONITORING
+========================= */
+
+.monitoring-page {
+    min-height: 100vh;
+    padding: 10px 20px;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    margin: 18px 40px;
+}
+
+.metric-card {
+    grid-column: span 2;
+    background: #cfc3b0;
+    border-radius: 16px;
+    min-height: 285px;
+    padding: 25px 15px;
+    text-align: center;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.metric-card:nth-child(4) {
+    grid-column: 2 / span 2;
+}
+
+.metric-card:nth-child(5) {
+    grid-column: 4 / span 2;
+}
+
+.metric-card h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.metric-card > span {
+    display: block;
+    margin-top: 7px;
+    color: #64728b;
+    font-size: 11px;
+}
+
+.metric-card > strong {
+    position: absolute;
+    top: 165px;
+    left: 0;
+    right: 0;
+    font-size: 28px;
+}
+
+.gauge {
+    position: absolute;
+    top: 105px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 195px;
+    height: 110px;
+}
+
+.gauge svg {
+    width: 195px;
+    height: 110px;
+    overflow: visible;
+}
+
+.gauge-background {
+    fill: none;
+    stroke: #edf1f5;
+    stroke-width: 18;
+    stroke-linecap: butt;
+}
+
+.gauge-progress {
+    fill: none;
+    stroke: #9b8b74;
+    stroke-width: 18;
+    stroke-linecap: butt;
+    stroke-dasharray: 282.74;
+    stroke-dashoffset: 282.74;
+}
+
+.monitoring-page .back-button {
+    margin: 0 0 0 0;
+}
+
+
+/* =========================
+   ASSESSMENT
+========================= */
+
+.assessment-page {
+    min-height: 100vh;
+    padding: 10px 20px;
+}
+
+.assessment-page .assessment-grid {
+    margin-top: 12px;
+}
+
+.assessment-page .wide-card {
+    margin-top: 12px;
+}
+
+
+/* =========================
+   REPORT
+========================= */
+
+.report-page {
+    min-height: 100vh;
+    padding: 10px 15px;
+}
+
+.report-title {
+    position: relative;
+    padding: 12px 17px 10px;
+}
+
+.report-title h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.report-title p {
+    margin: 4px 0;
+    color: #778398;
+    font-size: 10px;
+}
+
+.report-title > span {
+    position: absolute;
+    right: 15px;
+    top: 17px;
+    background: #f7efe3;
+    color: #b5a58e;
+    border-radius: 15px;
+    padding: 5px 12px;
+    font-size: 9px;
+}
+.report-page .back-button {
+    margin-top: 30px;
+}
+
+.recommendation-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.recommendation-card {
+    background: #cfc3b0;
+    border-radius: 12px;
+    padding: 18px;
+    min-height: 205px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.18);
+}
+
+.recommendation-card > span {
+    color: #64728b;
+    font-size: 8px;
+}
+
+.recommendation-card h2 {
+    margin: 4px 0 13px;
+    font-size: 18px;
+}
+
+.recommendation-card h3 {
+    margin: 0;
+    font-size: 12px;
+}
+
+.recommendation-card p {
+    margin: 8px 0;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.recommendation-card hr {
+    border: none;
+    border-top: 1px solid #a99c89;
+    margin: 10px 0;
+}
+
+.recommendation-card small {
+    color: #64728b;
+    font-size: 8px;
+}
+
+.deployment-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding: 18px;
+    background: #f7efe3;
+    border-radius: 12px;
+}
+
+.deployment-summary h3 {
+    margin: 0;
+    font-size: 12px;
+}
+
+.deployment-summary > div > p {
+    margin: 4px 0 12px;
+    color: #778398;
+    font-size: 8px;
+}
+
+.summary-metrics {
+    display: flex;
+    gap: 35px;
+}
+
+.summary-metrics div span {
+    display: block;
+    color: #64728b;
+    font-size: 8px;
+}
+
+.summary-metrics div strong {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+}
+
+.deployment-summary button {
+    border: none;
+    border-radius: 20px;
+    padding: 11px 22px;
+    background: #c4b7a3;
+    color: white;
+    cursor: pointer;
+    font-size: 10px;
+}
+.assessment-page {
+    min-height: 100vh;
+    padding: 10px 20px;
+}
+
+.assessment-page .assessment-grid {
+    margin-top: 12px;
+}
+
+.assessment-page .wide-card {
+    margin-top: 12px;
+}
+/* =========================
+   ASSESSMENT CARDS
+========================= */
+
+.assessment-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.assessment-card {
+    background: #cfc3b0;
+    border-radius: 12px;
+    padding: 16px 10px;
+    min-height: 115px;
+    text-align: center;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.18);
+}
+
+.assessment-card h3 {
+    margin: 0;
+    font-size: 13px;
+}
+
+.assessment-card span {
+    display: block;
+    margin-top: 5px;
+    color: #64728b;
+    font-size: 8px;
+}
+
+.assessment-card small {
+    display: block;
+    margin-top: 12px;
+    color: #64728b;
+    font-size: 8px;
+}
+
+.assessment-card strong {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 5px 11px;
+    border-radius: 15px;
+    background: #f4f5f6;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+
+/* =========================
+   ASSESSMENT WIDE CARDS
+========================= */
+
+.wide-card {
+    margin-top: 12px;
+    background: #cfc3b0;
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.18);
+}
+
+.wide-card h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+}
+
+.wide-card ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.wide-card li {
+    margin: 6px 0;
+    font-size: 10px;
+}
+
+
+/* =========================
+   SUMMARY
+========================= */
+
+.summary-card {
+    margin-top: 12px;
+    background: #cfc3b0;
+    border-radius: 12px;
+    min-height: 125px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.18);
+}
+
+.summary-card h3 {
+    margin: 0;
+    font-size: 13px;
+}
+
+.summary-card span {
+    display: block;
+    margin-top: 4px;
+    color: #64728b;
+    font-size: 8px;
+}
+
+.summary-card small {
+    display: block;
+    margin-top: 10px;
+    color: #64728b;
+    font-size: 8px;
+}
+
+.summary-card strong {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 5px 11px;
+    border-radius: 15px;
+    background: #f4f5f6;
+    font-size: 10px;
+    font-weight: 500;
+}
+.assessment-page .back-button {
+    margin-top: 30px;
+}
+.gauge {
+    position: absolute;
+    top: 105px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 195px;
+    height: 100px;
+    overflow: hidden;
+}
+
+.gauge-arc {
+    position: absolute;
+    width: 195px;
+    height: 195px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 270deg,
+        #9b8b74 0deg,
+        #9b8b74 129.6deg,
+        #edf1f5 129.6deg,
+        #edf1f5 180deg,
+        transparent 180deg
+    );
+
+    -webkit-mask: radial-gradient(
+        circle,
+        transparent 0 72%,
+        black 73%
+    );
+
+    mask: radial-gradient(
+        circle,
+        transparent 0 72%,
+        black 73%
+    );
+}
+
+.gauge.cpu .gauge-arc {
+    background: conic-gradient(
+        from 270deg,
+        #9b8b74 0deg,
+        #9b8b74 129.6deg,
+        #edf1f5 129.6deg,
+        #edf1f5 180deg,
+        transparent 180deg
+    );
+}
+
+.gauge.memory .gauge-arc {
+    background: conic-gradient(
+        from 270deg,
+        #9b8b74 0deg,
+        #9b8b74 81deg,
+        #edf1f5 81deg,
+        #edf1f5 180deg,
+        transparent 180deg
+    );
+}
+
+.gauge.response .gauge-arc {
+    background: conic-gradient(
+        from 270deg,
+        #9b8b74 0deg,
+        #9b8b74 108deg,
+        #edf1f5 108deg,
+        #edf1f5 180deg,
+        transparent 180deg
+    );
+}
+
+.gauge.request .gauge-arc {
+    background: conic-gradient(
+        from 270deg,
+        #9b8b74 0deg,
+        #9b8b74 59.4deg,
+        #edf1f5 59.4deg,
+        #edf1f5 180deg,
+        transparent 180deg
+    );
+}
+
+.gauge.error .gauge-arc {
+    background: conic-gradient(
+        from 270deg,
+        #9b8b74 0deg,
+        #9b8b74 109.8deg,
+        #edf1f5 109.8deg,
+        #edf1f5 180deg,
+        transparent 180deg
+    );
+}
