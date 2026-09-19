@@ -4,6 +4,7 @@ const simpleGit = require("simple-git");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const PROMETHEUS_URL = "http://localhost:9090";
 
 const app = express();
 
@@ -11,6 +12,23 @@ app.use(express.json());
 
 const PORT = 4000;
 
+async function queryPrometheus(query) {
+    const url = `${PROMETHEUS_URL}/api/v1/query?query=${encodeURIComponent(query)}`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+        throw new Error(`Prometheus request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.status !== "success") {
+        throw new Error(data.error || "Prometheus query failed");
+    }
+
+    return data.data;
+}
 
 // --------------------------------------------------
 // Run a terminal command from Node.js
@@ -43,7 +61,7 @@ function runCommand(command, cwd) {
 // Generate Kubernetes files automatically
 // --------------------------------------------------
 
-function generateKubernetesFiles(repoPath, imageName) {
+function generateKubernetesFiles(repoPath, imageName, jobId) {
 
     const kubernetesPath = path.join(
         repoPath,
@@ -61,16 +79,18 @@ function generateKubernetesFiles(repoPath, imageName) {
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cdds-app
+  name: ${jobId}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: cdds-app
+      cdds-job: ${jobId}
   template:
     metadata:
       labels:
         app: cdds-app
+        cdds-job: ${jobId}
     spec:
       containers:
         - name: cdds-app
@@ -93,10 +113,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: cdds-app-service
+  name: ${jobId}-service
 spec:
   selector:
     app: cdds-app
+    cdds-job: ${jobId}
   ports:
     - protocol: TCP
       port: 3000
@@ -134,7 +155,7 @@ spec:
 // Deploy application to Kubernetes
 // --------------------------------------------------
 
-async function deployToKubernetes(imageName, repoPath) {
+async function deployToKubernetes(imageName, repoPath, jobId) {
 
     console.log(
         `Deploying ${imageName} to Kubernetes...`
@@ -189,8 +210,8 @@ async function deployToKubernetes(imageName, repoPath) {
 
     // Wait for deployment
     await runCommand(
-        `kubectl rollout status deployment/cdds-app --timeout=120s`
-    );
+    `kubectl rollout status deployment/${jobId} --timeout=120s`
+);
 
 
     console.log(
@@ -199,10 +220,10 @@ async function deployToKubernetes(imageName, repoPath) {
 
 
     return {
-        success: true,
-        deployment: "cdds-app",
-        service: "cdds-app-service",
-        image: imageName
+    success: true,
+    deployment: jobId,
+    service: `${jobId}-service`,
+    image: imageName
     };
 }
 
@@ -359,7 +380,8 @@ app.post("/api/analyze", async (req, res) => {
                 const generatedFiles =
                     generateKubernetesFiles(
                         repoPath,
-                        dockerBuild.image
+                        dockerBuild.image,
+                        jobId
                     );
 
 
@@ -414,7 +436,8 @@ app.post("/api/analyze", async (req, res) => {
                 kubernetesDeployment =
                     await deployToKubernetes(
                         dockerBuild.image,
-                        repoPath
+                        repoPath,
+                        jobId
                     );
 
 
@@ -451,6 +474,8 @@ app.post("/api/analyze", async (req, res) => {
         res.json({
 
             success: true,
+
+            jobId: jobId,
 
             repository: repoUrl,
 
@@ -502,7 +527,87 @@ app.get("/health", (req, res) => {
 
 });
 
+// --------------------------------------------------
+// Metrics Api
+// --------------------------------------------------
 
+app.get("/api/metrics", async (req, res) => {
+
+    const { jobId } = req.query;
+
+    if (!jobId) {
+        return res.status(400).json({
+            success: false,
+            message: "jobId is required"
+        });
+    }
+
+    try {
+
+        const podPattern = `${jobId}-.*`;
+
+        const cpuQuery = `
+            rate(
+                container_cpu_usage_seconds_total{
+                    namespace="default",
+                    pod=~"${podPattern}",
+                    container!="POD",
+                    container!=""
+                }[2m]
+            )
+        `;
+
+        const memoryQuery = `
+            container_memory_working_set_bytes{
+                namespace="default",
+                pod=~"${podPattern}",
+                container!="POD",
+                container!=""
+            }
+        `;
+
+        const cpuData = await queryPrometheus(cpuQuery);
+        const memoryData = await queryPrometheus(memoryQuery);
+
+        const cpuResult = cpuData.result[0];
+        const memoryResult = memoryData.result[0];
+
+        const cpu = cpuResult
+            ? Number(cpuResult.value[1])
+            : null;
+
+        const memoryBytes = memoryResult
+            ? Number(memoryResult.value[1])
+            : null;
+
+        res.json({
+            success: true,
+            jobId: jobId,
+            pod: cpuResult?.metric?.pod ||
+                 memoryResult?.metric?.pod ||
+                 null,
+            cpu,
+            memoryBytes,
+            memoryMiB: memoryBytes
+                ? Number(
+                    (memoryBytes / 1024 / 1024).toFixed(2)
+                  )
+                : null
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Prometheus error:",
+            error.message
+        );
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
 // --------------------------------------------------
 // Start server
 // --------------------------------------------------
