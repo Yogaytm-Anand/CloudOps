@@ -1,7 +1,46 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
+import { useApp } from "../context/AppContext";
+
+// --------------------------------------------------
+// Derive a display status from attempted + success
+// --------------------------------------------------
+function stepStatus(attempted, success) {
+    if (!attempted) return "SKIPPED";
+    if (success)    return "PASS";
+    return "FAIL";
+}
+
+function StatusBadge({ status }) {
+    const cls =
+        status === "PASS"    ? "status-pass" :
+        status === "FAIL"    ? "status-fail" :
+        status === "SKIPPED" ? "status-skipped" : "";
+    return <strong className={cls}>{status}</strong>;
+}
 
 function DeploymentAnalysis() {
     const navigate = useNavigate();
+    const { analysis } = useApp();
+
+    // No analysis in context — guide the user back home
+    if (!analysis) {
+        return (
+            <div className="analysis-page">
+                <header className="page-header">
+                    <h1>Cloud Deployment Decision Support Platform</h1>
+                    <p>Deployment analysis</p>
+                </header>
+                <div className="empty-state">
+                    <p>No analysis available.</p>
+                    <button className="back-button" onClick={() => navigate("/")}>
+                        ← Submit a repository
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const { repository, validation, dockerBuild, kubernetesGeneration, kubernetesDeployment } = analysis;
 
     return (
         <div className="analysis-page">
@@ -13,49 +52,67 @@ function DeploymentAnalysis() {
 
             <div className="repository-display">
                 <span>Repository</span>
-                <p>https://github.com/example/cloud-native-app</p>
+                <p>{repository}</p>
             </div>
 
             <div className="analysis-list">
 
+                {/* Step 1 — Dockerfile validation */}
                 <div className="analysis-item">
                     <div>
-                        <h3>Validation</h3>
-                        <p>Dockerfile detected • Repository structure valid</p>
+                        <h3>Dockerfile Validation</h3>
+                        <p>
+                            {validation.dockerfile
+                                ? "Dockerfile detected in repository root"
+                                : "No Dockerfile found — Docker build was skipped"}
+                        </p>
                     </div>
-                    <strong>PASS</strong>
+                    <StatusBadge status={validation.dockerfile ? "PASS" : "FAIL"} />
                 </div>
 
+                {/* Step 2 — Docker build */}
                 <div className="analysis-item">
                     <div>
-                        <h3>CPU Usage</h3>
-                        <p>Estimated peak CPU: 62%</p>
+                        <h3>Docker Image Build</h3>
+                        <p>
+                            {!dockerBuild.attempted
+                                ? "Skipped — no Dockerfile"
+                                : dockerBuild.success
+                                    ? `Image built: ${dockerBuild.image}`
+                                    : `Build failed: ${dockerBuild.error || "unknown error"}`}
+                        </p>
                     </div>
-                    <strong>62%</strong>
+                    <StatusBadge status={stepStatus(dockerBuild.attempted, dockerBuild.success)} />
                 </div>
 
+                {/* Step 3 — Kubernetes file generation */}
                 <div className="analysis-item">
                     <div>
-                        <h3>Memory Usage</h3>
-                        <p>Estimated peak memory: 1.8 GB</p>
+                        <h3>Kubernetes File Generation</h3>
+                        <p>
+                            {!kubernetesGeneration.attempted
+                                ? "Skipped — Docker build did not succeed"
+                                : kubernetesGeneration.success
+                                    ? `Generated: ${(kubernetesGeneration.files || []).join(", ")}`
+                                    : `Generation failed: ${kubernetesGeneration.error || "unknown error"}`}
+                        </p>
                     </div>
-                    <strong>1.8 GB</strong>
+                    <StatusBadge status={stepStatus(kubernetesGeneration.attempted, kubernetesGeneration.success)} />
                 </div>
 
+                {/* Step 4 — Kubernetes deployment */}
                 <div className="analysis-item">
                     <div>
-                        <h3>Scaling</h3>
-                        <p>Recommended: horizontal scaling</p>
+                        <h3>Kubernetes Deployment</h3>
+                        <p>
+                            {!kubernetesDeployment.attempted
+                                ? "Skipped — previous step did not succeed"
+                                : kubernetesDeployment.success
+                                    ? `Deployed: ${kubernetesDeployment.deployment} / Service: ${kubernetesDeployment.service}`
+                                    : `Deployment failed: ${kubernetesDeployment.error || "unknown error"}`}
+                        </p>
                     </div>
-                    <strong>HPA</strong>
-                </div>
-
-                <div className="analysis-item">
-                    <div>
-                        <h3>Cost Calculation</h3>
-                        <p>Estimated monthly compute cost</p>
-                    </div>
-                    <strong>$84</strong>
+                    <StatusBadge status={stepStatus(kubernetesDeployment.attempted, kubernetesDeployment.success)} />
                 </div>
 
             </div>

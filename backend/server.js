@@ -8,6 +8,23 @@ const PROMETHEUS_URL = "http://localhost:9090";
 
 const app = express();
 
+// --------------------------------------------------
+// Optional CORS — only active when ALLOWED_ORIGIN is
+// set (e.g. for production separate-origin deployments).
+// Local dev uses the Vite proxy so no CORS is needed.
+// --------------------------------------------------
+if (process.env.ALLOWED_ORIGIN) {
+    app.use((req, res, next) => {
+        res.setHeader("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN);
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        if (req.method === "OPTIONS") {
+            return res.sendStatus(204);
+        }
+        next();
+    });
+}
+
 app.use(express.json());
 
 const PORT = 4000;
