@@ -6,8 +6,7 @@ import { fetchMetrics } from "../services/api";
 const POLL_INTERVAL_MS = 5000;
 
 // --------------------------------------------------
-// SVG gauge — pure visual, no invented percentage.
-// When percentage is null the arc is hidden.
+// SVG gauge. A missing percentage leaves the progress arc hidden.
 // --------------------------------------------------
 function Gauge({ percentage }) {
     const circumference = 282.74;
@@ -39,12 +38,12 @@ function Gauge({ percentage }) {
 // shows an explicit "Not available" message instead
 // of a fake number.
 // --------------------------------------------------
-function MetricCard({ title, subtitle, value, unit, note }) {
+function MetricCard({ title, subtitle, value, unit, percentage, note, showGauge = true, className = "" }) {
     return (
-        <div className="metric-card">
+        <div className={`metric-card ${className}`}>
             <h2>{title}</h2>
             <span>{subtitle}</span>
-            <Gauge percentage={null} />
+            {showGauge && <Gauge percentage={percentage} />}
             <strong>
                 {value != null
                     ? `${value}${unit ? " " + unit : ""}`
@@ -133,6 +132,7 @@ function Monitoring() {
                             subtitle="CORE PERFORMANCE"
                             value={cpuMillicores}
                             unit="m"
+                            percentage={metrics?.cpuPercentage ?? null}
                             note={cpuMillicores == null ? "Waiting for Prometheus data" : null}
                         />
 
@@ -142,6 +142,7 @@ function Monitoring() {
                             subtitle="RAM UTILIZATION"
                             value={memoryMiB}
                             unit="MiB"
+                            percentage={metrics?.memoryPercentage ?? null}
                             note={memoryMiB == null ? "Waiting for Prometheus data" : null}
                         />
 
@@ -151,25 +152,27 @@ function Monitoring() {
                             subtitle="ACTIVE POD"
                             value={metrics?.pod ?? null}
                             unit=""
+                            showGauge={false}
+                            className="pod-card"
                             note={!metrics?.pod ? "Waiting for Prometheus data" : null}
                         />
 
-                        {/* Response Time — no backend source */}
                         <MetricCard
                             title="Response Time"
                             subtitle="APPLICATION LATENCY"
-                            value={null}
-                            unit=""
-                            note="Not available — no Prometheus metric configured"
+                            value={metrics?.responseTimeMs ?? null}
+                            unit="ms"
+                            percentage={metrics?.responseTimePercentage ?? null}
+                            note={metrics?.responseTimeMs == null ? "Waiting for service probe" : null}
                         />
 
-                        {/* Error Rate — no backend source */}
                         <MetricCard
                             title="Error Rate"
                             subtitle="SYSTEM RELIABILITY"
-                            value={null}
-                            unit=""
-                            note="Not available — no Prometheus metric configured"
+                            value={metrics?.errorRate ?? null}
+                            unit="%"
+                            percentage={metrics?.errorRatePercentage ?? null}
+                            note={metrics?.errorRate == null ? "Waiting for service probe" : null}
                         />
 
                     </div>

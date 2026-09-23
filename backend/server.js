@@ -4,7 +4,12 @@ const simpleGit = require("simple-git");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const { performance } = require("perf_hooks");
 const PROMETHEUS_URL = "http://localhost:9090";
+const KUBERNETES_PROXY_URL = process.env.KUBERNETES_PROXY_URL || "http://127.0.0.1:50527";
+const RESPONSE_TIME_TARGET_MS = 500;
+const MAX_PROBE_HISTORY = 60;
+const probeHistory = new Map();
 
 const app = express();
 
@@ -45,6 +50,43 @@ async function queryPrometheus(query) {
     }
 
     return data.data;
+}
+
+// Probe each deployed service through the local Kubernetes API proxy. This
+// gives the dashboard live application latency and a rolling probe error rate
+// even when the deployed application does not expose Prometheus HTTP metrics.
+async function probeDeployedService(jobId) {
+    const serviceName = encodeURIComponent(`${jobId}-service`);
+    const url = `${KUBERNETES_PROXY_URL}/api/v1/namespaces/default/services/${serviceName}:3000/proxy/`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    const startedAt = performance.now();
+    let succeeded = false;
+
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+        succeeded = response.ok;
+    } catch (error) {
+        succeeded = false;
+    } finally {
+        clearTimeout(timeout);
+    }
+
+    const responseTimeMs = Math.round(performance.now() - startedAt);
+    const samples = probeHistory.get(jobId) || [];
+    samples.push(succeeded);
+    if (samples.length > MAX_PROBE_HISTORY) samples.shift();
+    probeHistory.set(jobId, samples);
+
+    const failures = samples.filter((sample) => !sample).length;
+    const errorRate = Number(((failures / samples.length) * 100).toFixed(2));
+
+    return {
+        responseTimeMs,
+        responseTimePercentage: Math.min(100, (responseTimeMs / RESPONSE_TIME_TARGET_MS) * 100),
+        errorRate,
+        errorRatePercentage: errorRate
+    };
 }
 
 // --------------------------------------------------
@@ -583,11 +625,43 @@ app.get("/api/metrics", async (req, res) => {
             }
         `;
 
-        const cpuData = await queryPrometheus(cpuQuery);
-        const memoryData = await queryPrometheus(memoryQuery);
+        const cpuLimitQuery = `
+            container_spec_cpu_quota{
+                namespace="default",
+                pod=~"${podPattern}",
+                container!="POD",
+                container!=""
+            }
+            /
+            container_spec_cpu_period{
+                namespace="default",
+                pod=~"${podPattern}",
+                container!="POD",
+                container!=""
+            }
+        `;
+
+        const memoryLimitQuery = `
+            container_spec_memory_limit_bytes{
+                namespace="default",
+                pod=~"${podPattern}",
+                container!="POD",
+                container!=""
+            }
+        `;
+
+        const [cpuData, memoryData, cpuLimitData, memoryLimitData, serviceProbe] = await Promise.all([
+            queryPrometheus(cpuQuery),
+            queryPrometheus(memoryQuery),
+            queryPrometheus(cpuLimitQuery),
+            queryPrometheus(memoryLimitQuery),
+            probeDeployedService(jobId)
+        ]);
 
         const cpuResult = cpuData.result[0];
         const memoryResult = memoryData.result[0];
+        const cpuLimitResult = cpuLimitData.result[0];
+        const memoryLimitResult = memoryLimitData.result[0];
 
         const cpu = cpuResult
             ? Number(cpuResult.value[1])
@@ -597,6 +671,20 @@ app.get("/api/metrics", async (req, res) => {
             ? Number(memoryResult.value[1])
             : null;
 
+        const cpuLimitCores = cpuLimitResult
+            ? Number(cpuLimitResult.value[1])
+            : null;
+
+        const memoryLimitBytes = memoryLimitResult
+            ? Number(memoryLimitResult.value[1])
+            : null;
+
+        const toPercentage = (usage, limit) => (
+            Number.isFinite(usage) && Number.isFinite(limit) && limit > 0
+                ? Math.min(100, Math.max(0, (usage / limit) * 100))
+                : null
+        );
+
         res.json({
             success: true,
             jobId: jobId,
@@ -604,12 +692,15 @@ app.get("/api/metrics", async (req, res) => {
                  memoryResult?.metric?.pod ||
                  null,
             cpu,
+            cpuPercentage: toPercentage(cpu, cpuLimitCores),
             memoryBytes,
+            memoryPercentage: toPercentage(memoryBytes, memoryLimitBytes),
             memoryMiB: memoryBytes
                 ? Number(
                     (memoryBytes / 1024 / 1024).toFixed(2)
                   )
-                : null
+                : null,
+            ...serviceProbe
         });
 
     } catch (error) {
